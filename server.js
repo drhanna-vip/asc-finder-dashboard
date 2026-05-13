@@ -333,7 +333,7 @@ tr:hover td{background:#f9fafb}
           <select class="filter-sel" id="mapInnFilter" onchange="applyMapFilters()">
             <option value="">All INN</option>
             <option value="INN-confirmed">INN-confirmed ✅</option>
-            <option value="INN-likely" selected>INN-likely ⭐</option>
+            <option value="INN-likely">INN-likely ⭐</option>
             <option value="INN-verify">INN-verify</option>
           </select>
           <label>Type:</label>
@@ -375,7 +375,7 @@ tr:hover td{background:#f9fafb}
           <select id="dbInn" onchange="renderTable()">
             <option value="">All INN</option>
             <option value="INN-confirmed">INN-confirmed ✅</option>
-            <option value="INN-likely" selected>INN-likely ⭐</option>
+            <option value="INN-likely">INN-likely ⭐</option>
             <option value="INN-verify">INN-verify</option>
           </select>
           <select id="dbType" onchange="renderTable()">
