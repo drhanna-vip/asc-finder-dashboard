@@ -331,12 +331,10 @@ tr:hover td{background:#f9fafb}
           </select>
           <label>INN:</label>
           <select class="filter-sel" id="mapInnFilter" onchange="applyMapFilters()">
-            <option value="">All</option>
+            <option value="">All INN</option>
             <option value="INN-confirmed">INN-confirmed ✅</option>
-            <option value="INN-likely">INN-likely</option>
+            <option value="INN-likely" selected>INN-likely ⭐</option>
             <option value="INN-verify">INN-verify</option>
-            <option value="OON-signals">OON-signals</option>
-            <option value="INN-unknown">INN-unknown</option>
           </select>
           <label>Type:</label>
           <select class="filter-sel" id="mapTypeFilter" onchange="applyMapFilters()">
@@ -375,12 +373,10 @@ tr:hover td{background:#f9fafb}
             <option value="TX">TX</option><option value="CA">CA</option><option value="PA">PA</option>
           </select>
           <select id="dbInn" onchange="renderTable()">
-            <option value="">All INN Status</option>
+            <option value="">All INN</option>
             <option value="INN-confirmed">INN-confirmed ✅</option>
-            <option value="INN-likely">INN-likely</option>
+            <option value="INN-likely" selected>INN-likely ⭐</option>
             <option value="INN-verify">INN-verify</option>
-            <option value="OON-signals">OON-signals</option>
-            <option value="INN-unknown">INN-unknown</option>
           </select>
           <select id="dbType" onchange="renderTable()">
             <option value="">Independent + Platform</option>
