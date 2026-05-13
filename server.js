@@ -139,8 +139,12 @@ app.get('/api/stats', requireAuth, (req, res) => {
   res.json({
     vipCount: vips.length,
     ascCount: ascs.length,
+    innConfirmed: ascs.filter(a => a.innStatus === 'INN-confirmed').length,
     innLikely: ascs.filter(a => a.innStatus === 'INN-likely').length,
     innVerify: ascs.filter(a => a.innStatus === 'INN-verify').length,
+    oonSignals: ascs.filter(a => a.innStatus === 'OON-signals').length,
+    independent: ascs.filter(a => a.independent === true).length,
+    platform: ascs.filter(a => a.innPlatform && a.innPlatform !== '').length,
     withNotes: Object.keys(notes).filter(k => notes[k].notes).length,
     states
   });
@@ -210,8 +214,13 @@ select.filter-sel{padding:5px 10px;border:1px solid var(--border);border-radius:
 .asc-name{font-weight:600;font-size:.88rem;color:var(--navy)}
 .asc-meta{font-size:.75rem;color:var(--gray);margin-top:3px}
 .inn-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.7rem;font-weight:700}
+.inn-confirmed{background:#dcfce7;color:#14532d;border:1px solid #86efac}
 .inn-likely{background:#d1fae5;color:#065f46}
 .inn-verify{background:#fef3c7;color:#92400e}
+.inn-oon{background:#fee2e2;color:#991b1b}
+.inn-unknown{background:#f3f4f6;color:#6b7280}
+.platform-badge{background:#e0e7ff;color:#3730a3;padding:2px 6px;border-radius:8px;font-size:.68rem;font-weight:700;margin-left:4px}
+.independent-badge{background:#fef9c3;color:#713f12;padding:2px 6px;border-radius:8px;font-size:.68rem;font-weight:700;margin-left:4px}
 .distance-tag{font-size:.72rem;color:var(--gray);margin-top:2px}
 .no-selection{padding:32px 16px;text-align:center;color:var(--gray);font-size:.88rem}
 .no-selection .icon{font-size:2.5rem;margin-bottom:12px}
@@ -283,8 +292,10 @@ tr:hover td{background:#f9fafb}
     <div class="brand">VIP <span>ASC Finder</span></div>
     <div class="header-stats" id="headerStats">
       <span class="stat-chip"><b id="statVips">—</b> VIP Offices</span>
-      <span class="stat-chip"><b id="statAscs">—</b> ASCs</span>
+      <span class="stat-chip"><b id="statAscs">—</b> True ASCs</span>
+      <span class="stat-chip"><b id="statInnConf">—</b> INN-confirmed</span>
       <span class="stat-chip"><b id="statInn">—</b> INN-likely</span>
+      <span class="stat-chip"><b id="statIndep">—</b> Independent</span>
     </div>
   </div>
   <a href="/logout" class="logout-btn">Sign Out</a>
@@ -316,13 +327,22 @@ tr:hover td{background:#f9fafb}
             <option value="">All States</option>
             <option value="NY">NY</option><option value="NJ">NJ</option>
             <option value="CT">CT</option><option value="MD">MD</option>
-            <option value="TX">TX</option><option value="CA">CA</option>
+            <option value="TX">TX</option><option value="CA">CA</option><option value="PA">PA</option>
           </select>
           <label>INN:</label>
           <select class="filter-sel" id="mapInnFilter" onchange="applyMapFilters()">
             <option value="">All</option>
+            <option value="INN-confirmed">INN-confirmed ✅</option>
             <option value="INN-likely">INN-likely</option>
             <option value="INN-verify">INN-verify</option>
+            <option value="OON-signals">OON-signals</option>
+            <option value="INN-unknown">INN-unknown</option>
+          </select>
+          <label>Type:</label>
+          <select class="filter-sel" id="mapTypeFilter" onchange="applyMapFilters()">
+            <option value="">All</option>
+            <option value="independent">Independent Only</option>
+            <option value="platform">Platform Chain Only</option>
           </select>
         </div>
         <div style="margin-left:auto;font-size:.8rem;color:var(--gray)" id="mapCounter">Loading data...</div>
@@ -352,12 +372,20 @@ tr:hover td{background:#f9fafb}
             <option value="">All States</option>
             <option value="NY">NY</option><option value="NJ">NJ</option>
             <option value="CT">CT</option><option value="MD">MD</option>
-            <option value="TX">TX</option><option value="CA">CA</option>
+            <option value="TX">TX</option><option value="CA">CA</option><option value="PA">PA</option>
           </select>
           <select id="dbInn" onchange="renderTable()">
             <option value="">All INN Status</option>
+            <option value="INN-confirmed">INN-confirmed ✅</option>
             <option value="INN-likely">INN-likely</option>
             <option value="INN-verify">INN-verify</option>
+            <option value="OON-signals">OON-signals</option>
+            <option value="INN-unknown">INN-unknown</option>
+          </select>
+          <select id="dbType" onchange="renderTable()">
+            <option value="">Independent + Platform</option>
+            <option value="independent">Independent Only</option>
+            <option value="platform">Platform Chain Only</option>
           </select>
           <select id="dbNotes" onchange="renderTable()">
             <option value="">All</option>
@@ -487,7 +515,9 @@ async function loadStats() {
   const s = await r.json();
   document.getElementById('statVips').textContent = s.vipCount;
   document.getElementById('statAscs').textContent = s.ascCount;
-  document.getElementById('statInn').textContent = s.innLikely;
+  document.getElementById('statInnConf').textContent = s.innConfirmed;
+  document.getElementById('statInn').textContent = s.innLikely + s.innConfirmed;
+  document.getElementById('statIndep').textContent = s.independent;
 }
 
 // ==================== TABS ====================
@@ -580,12 +610,16 @@ function setRadius(r, btn) {
 function applyMapFilters() {
   const stateF = document.getElementById('mapStateFilter').value;
   const innF = document.getElementById('mapInnFilter').value;
+  const typeF = document.getElementById('mapTypeFilter') ? document.getElementById('mapTypeFilter').value : '';
   
   let visible = 0;
   ascMarkers.forEach(({ asc, marker }) => {
     const stateOk = !stateF || asc.state === stateF;
     const innOk = !innF || asc.innStatus === innF;
-    if (stateOk && innOk && asc.lat && asc.lng) {
+    const typeOk = !typeF || 
+      (typeF === 'independent' && asc.independent === true) ||
+      (typeF === 'platform' && asc.innPlatform && asc.innPlatform !== '');
+    if (stateOk && innOk && typeOk && asc.lat && asc.lng) {
       if (!map.hasLayer(marker)) marker.addTo(map);
       visible++;
     } else {
@@ -644,9 +678,7 @@ function selectVip(v) {
     \`;
   } else {
     let items = nearby.map(({asc, dist}) => {
-      const badge = asc.innStatus === 'INN-likely'
-        ? '<span class="inn-badge inn-likely">INN-likely</span>'
-        : '<span class="inn-badge inn-verify">INN-verify</span>';
+      const badge = '<span class="inn-badge '+getInnBadgeClass(asc.innStatus)+'">'+asc.innStatus+'</span>';
       return \`<div class="asc-list-item" onclick="focusAsc('\${asc.id}')">
         <div class="asc-name">\${asc.name}</div>
         <div class="asc-meta">\${asc.city}, \${asc.state} · \${badge}</div>
@@ -675,14 +707,18 @@ function renderTable() {
   const innF = document.getElementById('dbInn').value;
   const notesF = document.getElementById('dbNotes').value;
 
+  const typeF = document.getElementById('dbType') ? document.getElementById('dbType').value : '';
   let filtered = allAscs.filter(a => {
     const match = !search || a.name.toLowerCase().includes(search) || a.city.toLowerCase().includes(search) || a.address.toLowerCase().includes(search);
     const stateOk = !stateF || a.state === stateF;
     const innOk = !innF || a.innStatus === innF;
+    const typeOk = !typeF || 
+      (typeF === 'independent' && a.independent === true) ||
+      (typeF === 'platform' && a.innPlatform && a.innPlatform !== '');
     const notesOk = !notesF ||
       (notesF === 'notes' && a.notes) ||
       (notesF === 'checklist' && Object.keys(a.checklist||{}).length > 0);
-    return match && stateOk && innOk && notesOk;
+    return match && stateOk && innOk && typeOk && notesOk;
   });
 
   filtered.sort((a,b) => {
@@ -700,9 +736,8 @@ function renderTable() {
   }
 
   tbody.innerHTML = filtered.map(a => {
-    const badge = a.innStatus === 'INN-likely'
-      ? '<span class="inn-badge inn-likely">INN-likely</span>'
-      : '<span class="inn-badge inn-verify">INN-verify</span>';
+    const badge = '<span class="inn-badge '+getInnBadgeClass(a.innStatus)+'">'+a.innStatus+'</span>';
+    const typeBadge = a.independent ? '<span class="independent-badge">Indep.</span>' : (a.innPlatform ? '<span class="platform-badge">'+a.innPlatform.split(' ')[0]+'</span>' : '');
     const noteSnippet = a.notes ? \`<span style="font-size:.75rem;color:#374151">\${a.notes.substring(0,50)}\${a.notes.length>50?'...':''}</span>\` : '<span style="color:#9ca3af;font-size:.75rem">—</span>';
     const checkCount = Object.values(a.checklist||{}).filter(v=>v===true).length;
     const checkTotal = Object.keys(a.checklist||{}).length;
