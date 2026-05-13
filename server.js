@@ -574,7 +574,7 @@ function buildAscPopup(a, distMi) {
   const dist = distMi != null ? \`<div style="color:#6b7280;font-size:.75rem">📏 \${distMi.toFixed(1)} mi from selected VIP</div>\` : '';
   const notePreview = a.notes ? \`<div style="margin-top:6px;font-size:.75rem;color:#374151;background:#f9fafb;padding:5px 7px;border-radius:4px">\${a.notes.substring(0,80)}\${a.notes.length>80?'...':''}</div>\` : '';
   return \`<div class="leaflet-popup-content" style="min-width:220px">
-    <div class="popup-name">\${a.dba ? a.dba : a.name}</div>\${a.dba ? `<div style="font-size:.72rem;color:#6b7280;margin-top:1px">Legal: \${a.name}</div>` : ""}
+    <div class="popup-name">\${a.dba ? a.dba : a.name}</div>\${a.dba ? '<div style="font-size:.72rem;color:#6b7280;margin-top:1px">Legal: '+a.name+'</div>' : ''}
     \${inn}
     <div>\${a.address}, \${a.city}, \${a.state} \${a.zip}</div>
     \${a.phone ? '<div>📞 '+a.phone+'</div>' : ''}
