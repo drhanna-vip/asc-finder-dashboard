@@ -1,0 +1,482 @@
+[
+  {
+    "id": "vip-001",
+    "name": "Midtown Manhattan",
+    "city": "New York",
+    "state": "NY",
+    "address": "290 Madison Avenue Floor 2, New York, NY 10017",
+    "lat": 40.7127281,
+    "lng": -74.0060152,
+    "phone": ""
+  },
+  {
+    "id": "vip-002",
+    "name": "Upper East Side",
+    "city": "New York",
+    "state": "NY",
+    "address": "1111 Park Avenue Suite 1B, New York, NY 10128",
+    "lat": 40.7127281,
+    "lng": -74.0060152,
+    "phone": ""
+  },
+  {
+    "id": "vip-003",
+    "name": "Financial District",
+    "city": "New York",
+    "state": "NY",
+    "address": "156 William Street Suite 302, New York, NY 10038",
+    "lat": 40.7127281,
+    "lng": -74.0060152,
+    "phone": ""
+  },
+  {
+    "id": "vip-004",
+    "name": "Astoria",
+    "city": "Astoria",
+    "state": "NY",
+    "address": "23-25 31st St Suite 410, Astoria, NY 11105",
+    "lat": 40.7720145,
+    "lng": -73.9302673,
+    "phone": ""
+  },
+  {
+    "id": "vip-005",
+    "name": "Forest Hills",
+    "city": "Forest Hills",
+    "state": "NY",
+    "address": "107-30 71st Rd Suite 204, Forest Hills, NY 11375",
+    "lat": 40.7231009,
+    "lng": -73.8466125,
+    "phone": ""
+  },
+  {
+    "id": "vip-006",
+    "name": "Downtown Brooklyn",
+    "city": "Brooklyn",
+    "state": "NY",
+    "address": "188 Montague Street 10th Floor, Brooklyn, NY 11201",
+    "lat": 40.6526006,
+    "lng": -73.9497211,
+    "phone": ""
+  },
+  {
+    "id": "vip-007",
+    "name": "Brighton Beach",
+    "city": "Brooklyn",
+    "state": "NY",
+    "address": "23 Brighton 11th St 7th Floor, Brooklyn, NY 11235",
+    "lat": 40.6526006,
+    "lng": -73.9497211,
+    "phone": ""
+  },
+  {
+    "id": "vip-008",
+    "name": "Bronx",
+    "city": "Bronx",
+    "state": "NY",
+    "address": "2100 Bartow Ave Suite 400, Bronx, NY 10475",
+    "lat": 40.8466508,
+    "lng": -73.8785937,
+    "phone": ""
+  },
+  {
+    "id": "vip-009",
+    "name": "Staten Island",
+    "city": "Staten Island",
+    "state": "NY",
+    "address": "4236 Hylan Blvd, Staten Island, NY 10312",
+    "lat": 40.536655,
+    "lng": -74.151089,
+    "phone": ""
+  },
+  {
+    "id": "vip-010",
+    "name": "Yonkers",
+    "city": "Yonkers",
+    "state": "NY",
+    "address": "124 New Main St, Yonkers, NY 10701",
+    "lat": 40.9328747,
+    "lng": -73.8969098,
+    "phone": ""
+  },
+  {
+    "id": "vip-011",
+    "name": "Hartsdale",
+    "city": "Hartsdale",
+    "state": "NY",
+    "address": "280 N Central Ave Suite 450, Hartsdale, NY 10530",
+    "lat": 41.0130865,
+    "lng": -73.8089743,
+    "phone": ""
+  },
+  {
+    "id": "vip-012",
+    "name": "Jericho",
+    "city": "Jericho",
+    "state": "NY",
+    "address": "350 Jericho Tpke Suite 310, Jericho, NY 11753",
+    "lat": 40.78743,
+    "lng": -73.5434608,
+    "phone": ""
+  },
+  {
+    "id": "vip-013",
+    "name": "West Islip",
+    "city": "West Islip",
+    "state": "NY",
+    "address": "500 Montauk Hwy Suite G, West Islip, NY 11795",
+    "lat": 40.7064515,
+    "lng": -73.2987663,
+    "phone": ""
+  },
+  {
+    "id": "vip-014",
+    "name": "Port Jefferson",
+    "city": "Port Jefferson",
+    "state": "NY",
+    "address": "70 N Country Rd Suite 201, Port Jefferson, NY 11777",
+    "lat": 40.9465118,
+    "lng": -73.0691257,
+    "phone": ""
+  },
+  {
+    "id": "vip-015",
+    "name": "Hoboken",
+    "city": "Hoboken",
+    "state": "NJ",
+    "address": "70 Hudson St Lower Level, Hoboken, NJ 07030",
+    "lat": 40.7433066,
+    "lng": -74.0323752,
+    "phone": ""
+  },
+  {
+    "id": "vip-016",
+    "name": "Edgewater",
+    "city": "Edgewater",
+    "state": "NJ",
+    "address": "968 River Rd Suite 200, Edgewater, NJ 07020",
+    "lat": 40.8270448,
+    "lng": -73.975694,
+    "phone": ""
+  },
+  {
+    "id": "vip-017",
+    "name": "Harrison",
+    "city": "Harrison",
+    "state": "NJ",
+    "address": "620 Essex St Suite 202, Harrison, NJ 07029",
+    "lat": 40.7464901,
+    "lng": -74.1562551,
+    "phone": ""
+  },
+  {
+    "id": "vip-018",
+    "name": "Clifton",
+    "city": "Clifton",
+    "state": "NJ",
+    "address": "1117 Route 46 East Suite 205, Clifton, NJ 07013",
+    "lat": 40.8584328,
+    "lng": -74.1637553,
+    "phone": ""
+  },
+  {
+    "id": "vip-019",
+    "name": "Woodland Park",
+    "city": "Woodland Park",
+    "state": "NJ",
+    "address": "1167 McBride Ave Suite 2, Woodland Park, NJ 07424",
+    "lat": 40.8893288,
+    "lng": -74.1969657,
+    "phone": ""
+  },
+  {
+    "id": "vip-020",
+    "name": "Paramus",
+    "city": "Paramus",
+    "state": "NJ",
+    "address": "140 NJ-17 Suite 269, Paramus, NJ 07652",
+    "lat": 40.9452911,
+    "lng": -74.0735899,
+    "phone": ""
+  },
+  {
+    "id": "vip-021",
+    "name": "Morris County (Parsippany)",
+    "city": "Parsippany",
+    "state": "NJ",
+    "address": "3695 Hill Rd Suite 2A, Parsippany, NJ 07054",
+    "lat": 40.8623835,
+    "lng": -74.4032354,
+    "phone": ""
+  },
+  {
+    "id": "vip-022",
+    "name": "Morristown",
+    "city": "Morristown",
+    "state": "NJ",
+    "address": "310 Madison Ave 3rd Floor, Morristown, NJ 07960",
+    "lat": 40.7970382,
+    "lng": -74.4809868,
+    "phone": ""
+  },
+  {
+    "id": "vip-023",
+    "name": "West Orange",
+    "city": "West Orange",
+    "state": "NJ",
+    "address": "405 Northfield Ave Suite 204, West Orange, NJ 07052",
+    "lat": 40.7987113,
+    "lng": -74.2390353,
+    "phone": ""
+  },
+  {
+    "id": "vip-024",
+    "name": "Scotch Plains",
+    "city": "Scotch Plains",
+    "state": "NJ",
+    "address": "2253 South Ave Suite 2, Scotch Plains, NJ 07076",
+    "lat": 40.65538,
+    "lng": -74.3898732,
+    "phone": ""
+  },
+  {
+    "id": "vip-025",
+    "name": "Woodbridge (Iselin)",
+    "city": "Iselin",
+    "state": "NJ",
+    "address": "517 US Route 1 Suite 1100, Iselin, NJ 08830",
+    "lat": 40.569335,
+    "lng": -74.3151125,
+    "phone": ""
+  },
+  {
+    "id": "vip-026",
+    "name": "Princeton",
+    "city": "Princeton",
+    "state": "NJ",
+    "address": "8 Forrestal Rd S Suite 203, Princeton, NJ 08540",
+    "lat": 40.3496953,
+    "lng": -74.6597376,
+    "phone": ""
+  },
+  {
+    "id": "vip-027",
+    "name": "Marlton",
+    "city": "Marlton",
+    "state": "NJ",
+    "address": "525 Route 73 N Suite 117, Marlton, NJ 08053",
+    "lat": 39.9005585,
+    "lng": -74.9338911,
+    "phone": ""
+  },
+  {
+    "id": "vip-028",
+    "name": "Stamford",
+    "city": "Stamford",
+    "state": "CT",
+    "address": "1266 E Main St Suite 465, Stamford, CT 06902",
+    "lat": 41.0534302,
+    "lng": -73.5387341,
+    "phone": ""
+  },
+  {
+    "id": "vip-029",
+    "name": "Hamden",
+    "city": "Hamden",
+    "state": "CT",
+    "address": "2080 Whitney Ave Suite 250, Hamden, CT 06518",
+    "lat": 41.3836233,
+    "lng": -72.9020069,
+    "phone": ""
+  },
+  {
+    "id": "vip-030",
+    "name": "Farmington",
+    "city": "Farmington",
+    "state": "CT",
+    "address": "399 Farmington Ave LL2, Farmington, CT 06032",
+    "lat": 41.7198216,
+    "lng": -72.8320435,
+    "phone": ""
+  },
+  {
+    "id": "vip-031",
+    "name": "Bethesda",
+    "city": "Bethesda",
+    "state": "MD",
+    "address": "6903 Rockledge Dr Suite 470, Bethesda, MD 20817",
+    "lat": 38.9812726,
+    "lng": -77.1233587,
+    "phone": ""
+  },
+  {
+    "id": "vip-032",
+    "name": "Bowie",
+    "city": "Bowie",
+    "state": "MD",
+    "address": "4201 Northview Dr Suite 104, Bowie, MD 20716",
+    "lat": 39.0080601,
+    "lng": -76.7797899,
+    "phone": ""
+  },
+  {
+    "id": "vip-033",
+    "name": "Maple Lawn (Fulton)",
+    "city": "Fulton",
+    "state": "MD",
+    "address": "11810 W Market Pl Suite 300, Fulton, MD 20759",
+    "lat": 39.1509408,
+    "lng": -76.9230307,
+    "phone": ""
+  },
+  {
+    "id": "vip-034",
+    "name": "Addison (Dallas)",
+    "city": "Dallas",
+    "state": "TX",
+    "address": "17980 Dallas Pkwy Suite 300, Dallas, TX 75287",
+    "lat": 32.7762719,
+    "lng": -96.7968559,
+    "phone": ""
+  },
+  {
+    "id": "vip-035",
+    "name": "Arlington",
+    "city": "Arlington",
+    "state": "TX",
+    "address": "3050 S Center St Suite 110, Arlington, TX 76014",
+    "lat": 32.7355816,
+    "lng": -97.1071186,
+    "phone": ""
+  },
+  {
+    "id": "vip-036",
+    "name": "Fort Worth",
+    "city": "Fort Worth",
+    "state": "TX",
+    "address": "3455 Locke Ave Suite 300, Fort Worth, TX 76107",
+    "lat": 32.753177,
+    "lng": -97.3327459,
+    "phone": ""
+  },
+  {
+    "id": "vip-037",
+    "name": "Cedar Park",
+    "city": "Cedar Park",
+    "state": "TX",
+    "address": "351 Cypress Creek Rd Suite 100, Cedar Park, TX 78612",
+    "lat": 30.5217116,
+    "lng": -97.827833,
+    "phone": ""
+  },
+  {
+    "id": "vip-038",
+    "name": "Kyle",
+    "city": "Kyle",
+    "state": "TX",
+    "address": "135 Bunton Creek Rd Suite 102, Kyle, TX 78640",
+    "lat": 29.9892928,
+    "lng": -97.8772103,
+    "phone": ""
+  },
+  {
+    "id": "vip-039",
+    "name": "Encino",
+    "city": "Encino",
+    "state": "CA",
+    "address": "16260 Ventura Blvd Suite 140, Encino, CA 91436",
+    "lat": 34.1591324,
+    "lng": -118.5016166,
+    "phone": ""
+  },
+  {
+    "id": "vip-040",
+    "name": "Huntington Beach",
+    "city": "Huntington Beach",
+    "state": "CA",
+    "address": "7677 Center Ave Suite 310, Huntington Beach, CA 92647",
+    "lat": 33.6783336,
+    "lng": -118.000016,
+    "phone": ""
+  },
+  {
+    "id": "vip-041",
+    "name": "Irvine",
+    "city": "Irvine",
+    "state": "CA",
+    "address": "4482 Barranca Pkwy Suite 252, Irvine, CA 92604",
+    "lat": 33.6856969,
+    "lng": -117.825981,
+    "phone": ""
+  },
+  {
+    "id": "vip-042",
+    "name": "Newport Beach",
+    "city": "Newport Beach",
+    "state": "CA",
+    "address": "1525 Superior Ave Suite 202, Newport Beach, CA 92663",
+    "lat": 33.6170092,
+    "lng": -117.9294401,
+    "phone": ""
+  },
+  {
+    "id": "vip-043",
+    "name": "National City",
+    "city": "National City",
+    "state": "CA",
+    "address": "22 W 35th St Suite 202, National City, CA 91950",
+    "lat": 32.6781085,
+    "lng": -117.0991967,
+    "phone": ""
+  },
+  {
+    "id": "vip-044",
+    "name": "Poway",
+    "city": "Poway",
+    "state": "CA",
+    "address": "15708 Pomerado Rd Suite N202, Poway, CA 92064",
+    "lat": 32.9628234,
+    "lng": -117.035864,
+    "phone": ""
+  },
+  {
+    "id": "vip-045",
+    "name": "San Diego (Sorrento Valley)",
+    "city": "San Diego",
+    "state": "CA",
+    "address": "5330 Carroll Canyon Rd Suite 140, San Diego, CA 92121",
+    "lat": 32.7174202,
+    "lng": -117.162772,
+    "phone": ""
+  },
+  {
+    "id": "vip-046",
+    "name": "Temecula",
+    "city": "Temecula",
+    "state": "CA",
+    "address": "27290 Madison Ave Suite 102, Temecula, CA 92590",
+    "lat": 33.4946353,
+    "lng": -117.147366,
+    "phone": ""
+  },
+  {
+    "id": "vip-047",
+    "name": "Palo Alto",
+    "city": "Palo Alto",
+    "state": "CA",
+    "address": "2248 Park Blvd, Palo Alto, CA 94306",
+    "lat": 37.4295517,
+    "lng": -122.1441319,
+    "phone": ""
+  },
+  {
+    "id": "vip-048",
+    "name": "San Jose",
+    "city": "San Jose",
+    "state": "CA",
+    "address": "1270 S Winchester Blvd Suite 102, San Jose, CA 95128",
+    "lat": 37.3361663,
+    "lng": -121.890591,
+    "phone": ""
+  }
+]
