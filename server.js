@@ -117,7 +117,17 @@ app.get('/api/ascs', requireAuth, (req, res) => {
   // Merge notes into ASC objects
   let merged = ascs.map(a => {
     const n = notes[a.id] || {};
-    return { ...a, notes: n.notes || a.notes || '', checklist: n.checklist || a.checklist || {} };
+    return {
+      ...a,
+      notes: n.notes || a.notes || '',
+      checklist: n.checklist || a.checklist || {},
+      phone: a.phone || '',
+      fax: a.fax || '',
+      website: a.website || '',
+      email: a.email || '',
+      contactName: a.contactName || '',
+      contactTitle: a.contactTitle || ''
+    };
   });
   // Operator type filter
   const opFilter = req.query.operatorType;
@@ -125,6 +135,32 @@ app.get('/api/ascs', requireAuth, (req, res) => {
     merged = merged.filter(a => a.operatorType === opFilter);
   }
   res.json(merged);
+});
+
+// CSV Export — must be before /:id routes
+app.get('/api/ascs/export/csv', requireAuth, (req, res) => {
+  const ascs = readJSON(ASCS_FILE, []);
+  const notes = readJSON(NOTES_FILE, {});
+  const escape = v => {
+    if (v == null) return '';
+    const s = String(v).replace(/"/g, '""');
+    return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s}"` : s;
+  };
+  const headers = ['Name','NPI','Address','City','State','ZIP','Phone','Website','Email','ContactName','ContactTitle','OperatorType','OperatorName','INN Status','Notes'];
+  const rows = ascs.map(a => {
+    const n = notes[a.id] || {};
+    return [
+      a.name, a.npi, a.address, a.city, a.state, a.zip,
+      a.phone || '', a.website || '', a.email || '',
+      a.contactName || '', a.contactTitle || '',
+      a.operatorType || '', a.operatorName || '',
+      a.innStatus || '', n.notes || a.notes || ''
+    ].map(escape).join(',');
+  });
+  const csv = [headers.map(escape).join(','), ...rows].join('\n');
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', 'attachment; filename="vip-asc-targets.csv"');
+  res.send(csv);
 });
 
 app.post('/api/ascs/:id/operator', requireAuth, express.json(), (req, res) => {
@@ -137,6 +173,35 @@ app.post('/api/ascs/:id/operator', requireAuth, express.json(), (req, res) => {
   ascs[idx].operatorName = operatorName || '';
   writeJSON(ASCS_FILE, ascs);
   res.json({ ok: true });
+});
+
+app.post('/api/ascs/:id/contact', requireAuth, express.json(), (req, res) => {
+  const { id } = req.params;
+  const { phone, website, email, fax, contactName, contactTitle } = req.body;
+  const ascs = readJSON(ASCS_FILE, []);
+  const idx = ascs.findIndex(a => a.id === id);
+  if (idx === -1) return res.status(404).json({ error: 'Not found' });
+  if (phone !== undefined) ascs[idx].phone = phone;
+  if (website !== undefined) ascs[idx].website = website;
+  if (email !== undefined) ascs[idx].email = email;
+  if (fax !== undefined) ascs[idx].fax = fax;
+  if (contactName !== undefined) ascs[idx].contactName = contactName;
+  if (contactTitle !== undefined) ascs[idx].contactTitle = contactTitle;
+  writeJSON(ASCS_FILE, ascs);
+  res.json({ ok: true });
+});
+
+app.get('/api/ascs/:id/lookup', requireAuth, (req, res) => {
+  const ascs = readJSON(ASCS_FILE, []);
+  const asc = ascs.find(a => a.id === req.params.id);
+  if (!asc) return res.status(404).json({ error: 'Not found' });
+  const q = encodeURIComponent(`"${asc.name}" ${asc.city} ${asc.state} surgery center phone website`);
+  res.json({
+    searchUrl: `https://www.google.com/search?q=${q}`,
+    name: asc.name,
+    city: asc.city,
+    state: asc.state
+  });
 });
 
 app.post('/api/ascs/:id/notes', requireAuth, express.json(), (req, res) => {
@@ -173,7 +238,9 @@ app.get('/api/stats', requireAuth, (req, res) => {
     healthSystemCount: ascs.filter(a => a.operatorType === 'health-system').length,
     independentCount: ascs.filter(a => a.operatorType === 'independent').length,
     nationalBreakdown,
-    states
+    states,
+    phoneCount: ascs.filter(a => a.phone && a.phone !== '').length,
+    phonePct: ascs.length ? Math.round(ascs.filter(a => a.phone && a.phone !== '').length / ascs.length * 100) : 0
   });
 });
 
@@ -279,6 +346,18 @@ select.filter-sel{padding:5px 10px;border:1px solid var(--border);border-radius:
 .distance-tag{font-size:.72rem;color:var(--gray);margin-top:2px}
 .no-selection{padding:32px 16px;text-align:center;color:var(--gray);font-size:.88rem}
 .no-selection .icon{font-size:2.5rem;margin-bottom:12px}
+.asc-contact{margin-top:2px}
+.contact-link{color:var(--gold);font-size:.72rem;text-decoration:none}
+.contact-link:hover{text-decoration:underline}
+.contact-fields label{display:block;font-size:.75rem;font-weight:600;color:var(--gray);margin-top:10px;margin-bottom:3px}
+.contact-fields input{width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.83rem;outline:none}
+.contact-fields input:focus{border-color:var(--navy)}
+.save-contact-btn{padding:7px 16px;background:var(--gold);color:var(--navy);border:none;border-radius:5px;font-weight:700;cursor:pointer;font-size:.82rem}
+.save-contact-btn:hover{background:var(--gold-light)}
+.lookup-btn{padding:7px 14px;background:var(--white);color:var(--navy);border:1px solid var(--border);border-radius:5px;font-weight:600;cursor:pointer;font-size:.82rem}
+.lookup-btn:hover{background:var(--light-bg)}
+.modal-section{margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+.modal-section-title{font-size:.85rem;font-weight:700;color:var(--gray);margin-bottom:4px}
 
 /* ===== TAB 2: DATABASE ===== */
 #tab-db{flex-direction:column}
@@ -353,6 +432,7 @@ tr:hover td{background:#f9fafb}
       <span class="stat-chip">🏥 <b id="statNational">—</b> National</span>
       <span class="stat-chip">🏛️ <b id="statHealthSys">—</b> Health System</span>
       <span class="stat-chip">🩺 <b id="statOpIndep">—</b> Independent</span>
+      <span class="stat-chip">📞 <b id="statPhonePct">—</b>% Phones</span>
     </div>
   </div>
   <a href="/logout" class="logout-btn">Sign Out</a>
@@ -461,6 +541,7 @@ tr:hover td{background:#f9fafb}
           </select>
         </div>
         <span id="dbCount" style="font-size:.8rem;color:var(--gray);margin-left:auto"></span>
+        <button onclick="exportCSV()" style="padding:7px 14px;background:var(--navy);color:var(--gold);border:none;border-radius:6px;font-size:.8rem;font-weight:700;cursor:pointer;white-space:nowrap">📥 Export CSV</button>
       </div>
       <div class="db-table-wrap">
         <table id="ascTable">
@@ -470,12 +551,16 @@ tr:hover td{background:#f9fafb}
               <th onclick="sortTable('state')">State</th>
               <th onclick="sortTable('city')">City</th>
               <th onclick="sortTable('innStatus')">INN Status</th>
+              <th>Phone</th>
+              <th>Website</th>
+              <th>Email</th>
+              <th>Contact</th>
               <th>Notes</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody id="ascTableBody">
-            <tr><td colspan="6" style="text-align:center;padding:40px;color:var(--gray)">Loading ASC data...</td></tr>
+            <tr><td colspan="10" style="text-align:center;padding:40px;color:var(--gray)">Loading ASC data...</td></tr>
           </tbody>
         </table>
       </div>
@@ -566,6 +651,27 @@ tr:hover td{background:#f9fafb}
       <span id="operatorSavedMsg" style="display:none;color:var(--success);font-size:.75rem;margin-top:4px">✓ Operator updated!</span>
     </div>
 
+    <div class="modal-section">
+      <h3 class="modal-section-title">📞 Contact Information</h3>
+      <div class="contact-fields">
+        <label>Phone</label>
+        <input type="tel" id="edit-phone" placeholder="555-555-5555">
+        <label>Website</label>
+        <input type="url" id="edit-website" placeholder="https://...">
+        <label>Email</label>
+        <input type="email" id="edit-email" placeholder="info@...">
+        <label>Contact Name</label>
+        <input type="text" id="edit-contact-name" placeholder="Dr. Jane Smith">
+        <label>Contact Title</label>
+        <input type="text" id="edit-contact-title" placeholder="Medical Director">
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="save-contact-btn" onclick="saveContact()">💾 Save Contact</button>
+          <button class="lookup-btn" onclick="lookupContact()">🔍 Google Search</button>
+        </div>
+        <div id="contact-saved" style="color:var(--success);font-size:.75rem;margin-top:4px;display:none">✅ Saved</div>
+      </div>
+    </div>
+
     <button class="save-checklist-btn" onclick="saveChecklist()">💾 Save Checklist</button>
   </div>
 </div>
@@ -622,6 +728,8 @@ async function loadStats() {
   document.getElementById('statNational').textContent = s.nationalCount || 0;
   document.getElementById('statHealthSys').textContent = s.healthSystemCount || 0;
   document.getElementById('statOpIndep').textContent = s.independentCount || 0;
+  const phonePctEl = document.getElementById('statPhonePct');
+  if (phonePctEl) phonePctEl.textContent = s.phonePct !== undefined ? s.phonePct : '—';
   renderNationalBreakdown(s.nationalBreakdown || {});
 }
 
@@ -710,7 +818,10 @@ function buildAscPopup(a, distMi) {
     <div class="popup-name">\${a.dba ? a.dba : a.name}</div>\${a.dba ? '<div style="font-size:.72rem;color:#6b7280;margin-top:1px">Legal: '+a.name+'</div>' : ''}
     \${inn}\${opLine}
     <div>\${a.address}, \${a.city}, \${a.state} \${a.zip}</div>
-    \${a.phone ? '<div>📞 '+a.phone+'</div>' : ''}
+    \${a.phone ? '<div>📞 <a href="tel:'+a.phone+'" style="color:var(--gold)">'+a.phone+'</a></div>' : ''}
+    \${a.website ? '<div>🌐 <a href="'+a.website+'" target="_blank" style="color:var(--gold)">Website</a></div>' : ''}
+    \${a.email ? '<div>✉️ <a href="mailto:'+a.email+'" style="color:var(--gold)">'+a.email+'</a></div>' : ''}
+    \${a.contactName ? '<div>👤 '+a.contactName+(a.contactTitle ? ', '+a.contactTitle : '')+'</div>' : ''}
     \${dist}
     \${notePreview}
     <button onclick="openChecklist('\${a.id}')" style="margin-top:8px;padding:4px 10px;background:#0a1628;color:#fff;border:none;border-radius:4px;font-size:.75rem;cursor:pointer">📋 Checklist</button>
@@ -814,7 +925,10 @@ function selectVip(v) {
       return \`<div class="asc-list-item" onclick="focusAsc('\${asc.id}')">
         <div class="asc-name">\${asc.name}</div>
         <div class="asc-meta">\${asc.city}, \${asc.state} · \${badge}\${opBadge}</div>
-        <div class="distance-tag">📏 \${dist.toFixed(1)} mi · \${asc.phone || 'No phone'}</div>
+        <div class="distance-tag">📏 \${dist.toFixed(1)} mi</div>
+        \${asc.phone ? \`<div class="asc-contact"><a href="tel:\${asc.phone}" class="contact-link" onclick="event.stopPropagation()">📞 \${asc.phone}</a></div>\` : ''}
+        \${asc.website ? \`<div class="asc-contact"><a href="\${asc.website}" target="_blank" class="contact-link" onclick="event.stopPropagation()">🌐 Website</a></div>\` : ''}
+        \${asc.email ? \`<div class="asc-contact"><a href="mailto:\${asc.email}" class="contact-link" onclick="event.stopPropagation()">✉️ \${asc.email}</a></div>\` : ''}
       </div>\`;
     }).join('');
     sidebar.innerHTML = \`
@@ -865,7 +979,7 @@ function renderTable() {
 
   const tbody = document.getElementById('ascTableBody');
   if (filtered.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:#9ca3af">No ASCs match your filters</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;color:#9ca3af">No ASCs match your filters</td></tr>';
     return;
   }
 
@@ -877,12 +991,20 @@ function renderTable() {
     const checkCount = Object.values(a.checklist||{}).filter(v=>v===true).length;
     const checkTotal = Object.keys(a.checklist||{}).length;
     const checkInfo = checkTotal > 0 ? \`<span style="font-size:.72rem;color:var(--gray)">\${checkCount}/\${checkTotal} done</span>\` : '';
-    
+    const phoneCell = a.phone ? \`<a href="tel:\${a.phone}" style="color:var(--gold);font-size:.78rem;text-decoration:none">\${a.phone}</a>\` : '<span style="color:#d1d5db">—</span>';
+    const websiteCell = a.website ? \`<a href="\${a.website}" target="_blank" style="color:var(--gold);font-size:.78rem">🌐 Visit</a>\` : '<span style="color:#d1d5db">—</span>';
+    const emailCell = a.email ? \`<a href="mailto:\${a.email}" style="color:var(--gold);font-size:.78rem">\${a.email}</a>\` : '<span style="color:#d1d5db">—</span>';
+    const contactCell = a.contactName ? \`<span style="font-size:.75rem;color:#374151">\${a.contactName}\${a.contactTitle ? '<br><span style="color:#9ca3af">'+a.contactTitle+'</span>' : ''}</span>\` : '<span style="color:#d1d5db">—</span>';
+
     return \`<tr>
-      <td><b style="color:var(--navy)">\${a.name}</b>${'<br>'}<span style="font-size:.72rem;color:#9ca3af">NPI: \${a.npi}</span>\${opBadge}</td>
+      <td><b style="color:var(--navy)">\${a.name}</b><br><span style="font-size:.72rem;color:#9ca3af">NPI: \${a.npi}</span>\${opBadge}</td>
       <td>\${a.state}</td>
       <td>\${a.city}</td>
       <td>\${badge}\${typeBadge}</td>
+      <td>\${phoneCell}</td>
+      <td>\${websiteCell}</td>
+      <td>\${emailCell}</td>
+      <td>\${contactCell}</td>
       <td>\${noteSnippet}\${checkInfo ? '<br>'+checkInfo : ''}</td>
       <td>
         <button class="action-btn" onclick="toggleNote('\${a.id}')">📝 Note</button>
@@ -891,7 +1013,7 @@ function renderTable() {
       </td>
     </tr>
     <tr id="note-row-\${a.id}" style="display:none">
-      <td colspan="6" style="background:#fffbeb;padding:10px 16px">
+      <td colspan="10" style="background:#fffbeb;padding:10px 16px">
         <textarea class="note-inline" id="note-text-\${a.id}" placeholder="Add notes about this ASC...">\${a.notes||''}</textarea>
         <br><button class="note-save-btn" onclick="saveNote('\${a.id}')">Save Note</button>
         <span id="note-saved-\${a.id}" class="note-saved" style="display:none">✓ Saved!</span>
@@ -1022,6 +1144,15 @@ function openChecklist(id) {
   const savedMsg = document.getElementById('operatorSavedMsg');
   if (savedMsg) savedMsg.style.display = 'none';
 
+  // Populate contact fields
+  document.getElementById('edit-phone').value = asc.phone || '';
+  document.getElementById('edit-website').value = asc.website || '';
+  document.getElementById('edit-email').value = asc.email || '';
+  document.getElementById('edit-contact-name').value = asc.contactName || '';
+  document.getElementById('edit-contact-title').value = asc.contactTitle || '';
+  const cSaved = document.getElementById('contact-saved');
+  if (cSaved) cSaved.style.display = 'none';
+
   document.getElementById('checklistModal').classList.add('open');
 }
 
@@ -1066,6 +1197,37 @@ function closeModal() {
 document.getElementById('checklistModal').addEventListener('click', e => {
   if (e.target === e.currentTarget) closeModal();
 });
+
+// ==================== CONTACT INFO ====================
+async function saveContact() {
+  const asc = allAscs.find(a => a.id === modalAscId);
+  if (!asc) return;
+  const phone = document.getElementById('edit-phone').value.trim();
+  const website = document.getElementById('edit-website').value.trim();
+  const email = document.getElementById('edit-email').value.trim();
+  const contactName = document.getElementById('edit-contact-name').value.trim();
+  const contactTitle = document.getElementById('edit-contact-title').value.trim();
+  await fetch(\`/api/ascs/\${modalAscId}/contact\`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone, website, email, contactName, contactTitle })
+  });
+  asc.phone = phone; asc.website = website; asc.email = email;
+  asc.contactName = contactName; asc.contactTitle = contactTitle;
+  const el = document.getElementById('contact-saved');
+  if (el) { el.style.display = 'block'; setTimeout(() => { el.style.display = 'none'; }, 2500); }
+  renderTable();
+}
+
+async function lookupContact() {
+  if (!modalAscId) return;
+  const r = await fetch(\`/api/ascs/\${modalAscId}/lookup\`);
+  const data = await r.json();
+  if (data.searchUrl) window.open(data.searchUrl, '_blank');
+}
+
+function exportCSV() {
+  window.location.href = '/api/ascs/export/csv';
+}
 
 // ==================== OPERATOR OVERRIDE ====================
 async function saveOperatorOverride() {
