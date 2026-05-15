@@ -115,11 +115,28 @@ app.get('/api/ascs', requireAuth, (req, res) => {
   const ascs = readJSON(ASCS_FILE, []);
   const notes = readJSON(NOTES_FILE, {});
   // Merge notes into ASC objects
-  const merged = ascs.map(a => {
+  let merged = ascs.map(a => {
     const n = notes[a.id] || {};
     return { ...a, notes: n.notes || a.notes || '', checklist: n.checklist || a.checklist || {} };
   });
+  // Operator type filter
+  const opFilter = req.query.operatorType;
+  if (opFilter && opFilter !== 'all') {
+    merged = merged.filter(a => a.operatorType === opFilter);
+  }
   res.json(merged);
+});
+
+app.post('/api/ascs/:id/operator', requireAuth, express.json(), (req, res) => {
+  const { id } = req.params;
+  const { operatorType, operatorName } = req.body;
+  const ascs = readJSON(ASCS_FILE, []);
+  const idx = ascs.findIndex(a => a.id === id);
+  if (idx === -1) return res.status(404).json({ error: 'Not found' });
+  ascs[idx].operatorType = operatorType || 'independent';
+  ascs[idx].operatorName = operatorName || '';
+  writeJSON(ASCS_FILE, ascs);
+  res.json({ ok: true });
 });
 
 app.post('/api/ascs/:id/notes', requireAuth, express.json(), (req, res) => {
@@ -136,6 +153,12 @@ app.get('/api/stats', requireAuth, (req, res) => {
   const vips = readJSON(VIP_LOC_FILE, []);
   const notes = readJSON(NOTES_FILE, {});
   const states = [...new Set(ascs.map(a => a.state))].sort();
+  // National operator breakdown
+  const nationalBreakdown = {};
+  ascs.filter(a => a.operatorType === 'national').forEach(a => {
+    const key = a.operatorName || 'Unknown';
+    nationalBreakdown[key] = (nationalBreakdown[key] || 0) + 1;
+  });
   res.json({
     vipCount: vips.length,
     ascCount: ascs.length,
@@ -146,6 +169,10 @@ app.get('/api/stats', requireAuth, (req, res) => {
     independent: ascs.filter(a => a.independent === true).length,
     platform: ascs.filter(a => a.innPlatform && a.innPlatform !== '').length,
     withNotes: Object.keys(notes).filter(k => notes[k].notes).length,
+    nationalCount: ascs.filter(a => a.operatorType === 'national').length,
+    healthSystemCount: ascs.filter(a => a.operatorType === 'health-system').length,
+    independentCount: ascs.filter(a => a.operatorType === 'independent').length,
+    nationalBreakdown,
     states
   });
 });
@@ -221,6 +248,34 @@ select.filter-sel{padding:5px 10px;border:1px solid var(--border);border-radius:
 .inn-unknown{background:#f3f4f6;color:#6b7280}
 .platform-badge{background:#e0e7ff;color:#3730a3;padding:2px 6px;border-radius:8px;font-size:.68rem;font-weight:700;margin-left:4px}
 .independent-badge{background:#fef9c3;color:#713f12;padding:2px 6px;border-radius:8px;font-size:.68rem;font-weight:700;margin-left:4px}
+.operator-badge{padding:2px 7px;border-radius:8px;font-size:.68rem;font-weight:700;margin-left:4px}
+.op-national{background:#fef3c7;color:#92400e}
+.op-health-system{background:#e0e7ff;color:#3730a3}
+.op-independent{background:#f3f4f6;color:#6b7280}
+
+/* ===== TAB 4: OPERATORS ===== */
+#tab-ops{flex-direction:column}
+.ops-header{padding:16px 20px 8px;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0}
+.ops-header h2{color:var(--navy);font-size:1rem;font-weight:700}
+.ops-header p{color:var(--gray);font-size:.82rem;margin-top:2px}
+.ops-grid{flex:1;overflow-y:auto;padding:20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;align-content:start}
+.op-card{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:18px;border-top:4px solid var(--gold);transition:.15s}
+.op-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.1);transform:translateY(-1px)}
+.op-card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+.op-card-name{color:var(--navy);font-size:1rem;font-weight:800}
+.op-card-parent{color:var(--gray);font-size:.75rem;margin-top:2px}
+.op-db-count{background:var(--navy);color:var(--gold);border-radius:20px;padding:3px 12px;font-size:.78rem;font-weight:700;white-space:nowrap}
+.op-card-detail{font-size:.78rem;color:#374151;line-height:1.8}
+.op-card-detail span{margin-right:12px}
+.op-card-link{display:inline-block;margin-top:10px;color:var(--gold);font-size:.78rem;font-weight:600;text-decoration:none;border:1px solid var(--gold);padding:3px 10px;border-radius:5px}
+.op-card-link:hover{background:var(--gold);color:var(--navy)}
+.op-type-chip{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.7rem;font-weight:700;margin-bottom:8px}
+.op-national-chip{background:#fef3c7;color:#92400e}
+.ops-breakdown{padding:16px 20px;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0}
+.ops-breakdown h3{color:var(--navy);font-size:.9rem;font-weight:700;margin-bottom:8px}
+.breakdown-chips{display:flex;flex-wrap:wrap;gap:8px}
+.breakdown-chip{background:var(--light-bg);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:.78rem;color:var(--navy)}
+.breakdown-chip b{color:var(--gold)}
 .distance-tag{font-size:.72rem;color:var(--gray);margin-top:2px}
 .no-selection{padding:32px 16px;text-align:center;color:var(--gray);font-size:.88rem}
 .no-selection .icon{font-size:2.5rem;margin-bottom:12px}
@@ -295,7 +350,9 @@ tr:hover td{background:#f9fafb}
       <span class="stat-chip"><b id="statAscs">—</b> True ASCs</span>
       <span class="stat-chip"><b id="statInnConf">—</b> INN-confirmed</span>
       <span class="stat-chip"><b id="statInn">—</b> INN-likely</span>
-      <span class="stat-chip"><b id="statIndep">—</b> Independent</span>
+      <span class="stat-chip">🏥 <b id="statNational">—</b> National</span>
+      <span class="stat-chip">🏛️ <b id="statHealthSys">—</b> Health System</span>
+      <span class="stat-chip">🩺 <b id="statOpIndep">—</b> Independent</span>
     </div>
   </div>
   <a href="/logout" class="logout-btn">Sign Out</a>
@@ -306,6 +363,7 @@ tr:hover td{background:#f9fafb}
   <button class="tab-btn active" onclick="showTab('map',this)">🗺 Map View</button>
   <button class="tab-btn" onclick="showTab('db',this)">📋 ASC Database</button>
   <button class="tab-btn" onclick="showTab('vip',this)">📍 VIP Locations</button>
+  <button class="tab-btn" onclick="showTab('ops',this)">🏢 Operators</button>
 </div>
 
 <!-- CONTENT -->
@@ -341,6 +399,13 @@ tr:hover td{background:#f9fafb}
             <option value="">All</option>
             <option value="independent">Independent Only</option>
             <option value="platform">Platform Chain Only</option>
+          </select>
+          <label>Operator:</label>
+          <select class="filter-sel" id="mapOperatorFilter" onchange="applyMapFilters()">
+            <option value="all">All Operators</option>
+            <option value="national">National Operators</option>
+            <option value="health-system">Health Systems</option>
+            <option value="independent">Independent</option>
           </select>
         </div>
         <div style="margin-left:auto;font-size:.8rem;color:var(--gray)" id="mapCounter">Loading data...</div>
@@ -388,6 +453,12 @@ tr:hover td{background:#f9fafb}
             <option value="notes">Has Notes</option>
             <option value="checklist">Has Checklist</option>
           </select>
+          <select id="dbOperator" onchange="renderTable()">
+            <option value="all">All Operators</option>
+            <option value="national">National Operators</option>
+            <option value="health-system">Health Systems</option>
+            <option value="independent">Independent</option>
+          </select>
         </div>
         <span id="dbCount" style="font-size:.8rem;color:var(--gray);margin-left:auto"></span>
       </div>
@@ -407,6 +478,23 @@ tr:hover td{background:#f9fafb}
             <tr><td colspan="6" style="text-align:center;padding:40px;color:var(--gray)">Loading ASC data...</td></tr>
           </tbody>
         </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 4: OPERATORS -->
+  <div class="tab-panel" id="tab-ops">
+    <div style="display:flex;flex-direction:column;flex:1;overflow:hidden">
+      <div class="ops-breakdown" id="opsBreakdownSection">
+        <h3>National Operators in This Database</h3>
+        <div class="breakdown-chips" id="nationalBreakdownChips"><span style="color:#9ca3af;font-size:.8rem">Loading...</span></div>
+      </div>
+      <div class="ops-header">
+        <h2>Major National ASC Operators</h2>
+        <p>Reference guide to national and regional ASC management companies — with their representation in the VIP database.</p>
+      </div>
+      <div class="ops-grid" id="opsGrid">
+        <div style="color:#9ca3af;font-size:.88rem;padding:20px">Loading operator data...</div>
       </div>
     </div>
   </div>
@@ -463,6 +551,21 @@ tr:hover td{background:#f9fafb}
       <button onclick="addCustomItem()">+Add</button>
     </div>
     
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+      <label style="font-size:.8rem;font-weight:600;color:var(--gray);display:block;margin-bottom:6px">🏢 Operator Type Override:</label>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <select id="modalOperatorType" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.82rem;flex:1;min-width:150px">
+          <option value="national">National Operator</option>
+          <option value="health-system">Health System</option>
+          <option value="independent">Independent</option>
+          <option value="unknown">Unknown</option>
+        </select>
+        <input type="text" id="modalOperatorName" placeholder="Operator name (e.g. USPI)" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.82rem;flex:1;min-width:140px">
+        <button onclick="saveOperatorOverride()" style="padding:7px 14px;background:var(--gold);color:var(--navy);border:none;border-radius:5px;font-weight:700;cursor:pointer;font-size:.82rem">Save</button>
+      </div>
+      <span id="operatorSavedMsg" style="display:none;color:var(--success);font-size:.75rem;margin-top:4px">✓ Operator updated!</span>
+    </div>
+
     <button class="save-checklist-btn" onclick="saveChecklist()">💾 Save Checklist</button>
   </div>
 </div>
@@ -494,6 +597,7 @@ async function init() {
   initMap();
   renderTable();
   renderVipTable();
+  renderOpsTab();
 }
 
 async function loadVipLocations() {
@@ -506,14 +610,19 @@ async function loadAscs() {
   allAscs = await r.json();
 }
 
+let cachedStats = null;
 async function loadStats() {
   const r = await fetch('/api/stats');
   const s = await r.json();
+  cachedStats = s;
   document.getElementById('statVips').textContent = s.vipCount;
   document.getElementById('statAscs').textContent = s.ascCount;
   document.getElementById('statInnConf').textContent = s.innConfirmed;
   document.getElementById('statInn').textContent = s.innLikely + s.innConfirmed;
-  document.getElementById('statIndep').textContent = s.independent;
+  document.getElementById('statNational').textContent = s.nationalCount || 0;
+  document.getElementById('statHealthSys').textContent = s.healthSystemCount || 0;
+  document.getElementById('statOpIndep').textContent = s.independentCount || 0;
+  renderNationalBreakdown(s.nationalBreakdown || {});
 }
 
 // ==================== TABS ====================
@@ -523,6 +632,7 @@ function showTab(name, btn) {
   document.getElementById('tab-'+name).classList.add('active');
   btn.classList.add('active');
   if (name === 'map') { setTimeout(() => map && map.invalidateSize(), 100); }
+  if (name === 'ops') { renderOpsTab(); }
 }
 
 // ==================== MAP ====================
@@ -567,15 +677,38 @@ function initMap() {
   applyMapFilters();
 }
 
+function getInnBadgeClass(status) {
+  if (status === 'INN-confirmed') return 'inn-confirmed';
+  if (status === 'INN-likely') return 'inn-likely';
+  if (status === 'INN-verify') return 'inn-verify';
+  if (status === 'OON-signals') return 'inn-oon';
+  return 'inn-unknown';
+}
+
+function buildOperatorBadge(a) {
+  if (a.operatorType === 'national') {
+    return '<span class="operator-badge op-national">🏥 ' + (a.operatorName || 'National') + '</span>';
+  } else if (a.operatorType === 'health-system') {
+    return '<span class="operator-badge op-health-system">🏛️ Health System</span>';
+  } else if (a.operatorType === 'independent') {
+    return '<span class="operator-badge op-independent">🩺 Independent</span>';
+  }
+  return '';
+}
+
 function buildAscPopup(a, distMi) {
   const inn = a.innStatus === 'INN-likely'
     ? '<span class="popup-inn" style="background:#d1fae5;color:#065f46">INN-likely</span>'
     : '<span class="popup-inn" style="background:#fef3c7;color:#92400e">INN-verify</span>';
   const dist = distMi != null ? \`<div style="color:#6b7280;font-size:.75rem">📏 \${distMi.toFixed(1)} mi from selected VIP</div>\` : '';
   const notePreview = a.notes ? \`<div style="margin-top:6px;font-size:.75rem;color:#374151;background:#f9fafb;padding:5px 7px;border-radius:4px">\${a.notes.substring(0,80)}\${a.notes.length>80?'...':''}</div>\` : '';
+  let opLine = '';
+  if (a.operatorType === 'national') opLine = \`<div style="font-size:.75rem;margin-top:2px">🏥 National Operator — \${a.operatorName||''}</div>\`;
+  else if (a.operatorType === 'health-system') opLine = '<div style="font-size:.75rem;margin-top:2px">🏛️ Health System</div>';
+  else if (a.operatorType === 'independent') opLine = '<div style="font-size:.75rem;margin-top:2px">🩺 Independent</div>';
   return \`<div class="leaflet-popup-content" style="min-width:220px">
     <div class="popup-name">\${a.dba ? a.dba : a.name}</div>\${a.dba ? '<div style="font-size:.72rem;color:#6b7280;margin-top:1px">Legal: '+a.name+'</div>' : ''}
-    \${inn}
+    \${inn}\${opLine}
     <div>\${a.address}, \${a.city}, \${a.state} \${a.zip}</div>
     \${a.phone ? '<div>📞 '+a.phone+'</div>' : ''}
     \${dist}
@@ -607,6 +740,7 @@ function applyMapFilters() {
   const stateF = document.getElementById('mapStateFilter').value;
   const innF = document.getElementById('mapInnFilter').value;
   const typeF = document.getElementById('mapTypeFilter') ? document.getElementById('mapTypeFilter').value : '';
+  const opF = document.getElementById('mapOperatorFilter') ? document.getElementById('mapOperatorFilter').value : 'all';
   
   let visible = 0;
   ascMarkers.forEach(({ asc, marker }) => {
@@ -615,7 +749,8 @@ function applyMapFilters() {
     const typeOk = !typeF || 
       (typeF === 'independent' && asc.independent === true) ||
       (typeF === 'platform' && asc.innPlatform && asc.innPlatform !== '');
-    if (stateOk && innOk && typeOk && asc.lat && asc.lng) {
+    const opOk = !opF || opF === 'all' || asc.operatorType === opF;
+    if (stateOk && innOk && typeOk && opOk && asc.lat && asc.lng) {
       if (!map.hasLayer(marker)) marker.addTo(map);
       visible++;
     } else {
@@ -675,9 +810,10 @@ function selectVip(v) {
   } else {
     let items = nearby.map(({asc, dist}) => {
       const badge = '<span class="inn-badge '+getInnBadgeClass(asc.innStatus)+'">'+asc.innStatus+'</span>';
+      const opBadge = buildOperatorBadge(asc);
       return \`<div class="asc-list-item" onclick="focusAsc('\${asc.id}')">
         <div class="asc-name">\${asc.name}</div>
-        <div class="asc-meta">\${asc.city}, \${asc.state} · \${badge}</div>
+        <div class="asc-meta">\${asc.city}, \${asc.state} · \${badge}\${opBadge}</div>
         <div class="distance-tag">📏 \${dist.toFixed(1)} mi · \${asc.phone || 'No phone'}</div>
       </div>\`;
     }).join('');
@@ -704,6 +840,7 @@ function renderTable() {
   const notesF = document.getElementById('dbNotes').value;
 
   const typeF = document.getElementById('dbType') ? document.getElementById('dbType').value : '';
+  const opF = document.getElementById('dbOperator') ? document.getElementById('dbOperator').value : 'all';
   let filtered = allAscs.filter(a => {
     const match = !search || a.name.toLowerCase().includes(search) || (a.dba||"").toLowerCase().includes(search) || a.city.toLowerCase().includes(search) || a.address.toLowerCase().includes(search);
     const stateOk = !stateF || a.state === stateF;
@@ -714,7 +851,8 @@ function renderTable() {
     const notesOk = !notesF ||
       (notesF === 'notes' && a.notes) ||
       (notesF === 'checklist' && Object.keys(a.checklist||{}).length > 0);
-    return match && stateOk && innOk && typeOk && notesOk;
+    const opOk = !opF || opF === 'all' || a.operatorType === opF;
+    return match && stateOk && innOk && typeOk && notesOk && opOk;
   });
 
   filtered.sort((a,b) => {
@@ -734,16 +872,17 @@ function renderTable() {
   tbody.innerHTML = filtered.map(a => {
     const badge = '<span class="inn-badge '+getInnBadgeClass(a.innStatus)+'">'+a.innStatus+'</span>';
     const typeBadge = a.independent ? '<span class="independent-badge">Indep.</span>' : (a.innPlatform ? '<span class="platform-badge">'+a.innPlatform.split(' ')[0]+'</span>' : '');
+    const opBadge = buildOperatorBadge(a);
     const noteSnippet = a.notes ? \`<span style="font-size:.75rem;color:#374151">\${a.notes.substring(0,50)}\${a.notes.length>50?'...':''}</span>\` : '<span style="color:#9ca3af;font-size:.75rem">—</span>';
     const checkCount = Object.values(a.checklist||{}).filter(v=>v===true).length;
     const checkTotal = Object.keys(a.checklist||{}).length;
     const checkInfo = checkTotal > 0 ? \`<span style="font-size:.72rem;color:var(--gray)">\${checkCount}/\${checkTotal} done</span>\` : '';
     
     return \`<tr>
-      <td><b style="color:var(--navy)">\${a.name}</b>${'<br>'}<span style="font-size:.72rem;color:#9ca3af">NPI: \${a.npi}</span></td>
+      <td><b style="color:var(--navy)">\${a.name}</b>${'<br>'}<span style="font-size:.72rem;color:#9ca3af">NPI: \${a.npi}</span>\${opBadge}</td>
       <td>\${a.state}</td>
       <td>\${a.city}</td>
-      <td>\${badge}</td>
+      <td>\${badge}\${typeBadge}</td>
       <td>\${noteSnippet}\${checkInfo ? '<br>'+checkInfo : ''}</td>
       <td>
         <button class="action-btn" onclick="toggleNote('\${a.id}')">📝 Note</button>
@@ -871,6 +1010,18 @@ function openChecklist(id) {
     b.classList.toggle('active-desig', b.dataset.desig === desig);
   });
   
+  // Populate operator override
+  const opType = asc.operatorType || 'independent';
+  const opName = asc.operatorName || '';
+  const opSel = document.getElementById('modalOperatorType');
+  if (opSel) {
+    opSel.value = opType;
+  }
+  const opNameEl = document.getElementById('modalOperatorName');
+  if (opNameEl) opNameEl.value = opName;
+  const savedMsg = document.getElementById('operatorSavedMsg');
+  if (savedMsg) savedMsg.style.display = 'none';
+
   document.getElementById('checklistModal').classList.add('open');
 }
 
@@ -915,6 +1066,81 @@ function closeModal() {
 document.getElementById('checklistModal').addEventListener('click', e => {
   if (e.target === e.currentTarget) closeModal();
 });
+
+// ==================== OPERATOR OVERRIDE ====================
+async function saveOperatorOverride() {
+  const asc = allAscs.find(a => a.id === modalAscId);
+  if (!asc) return;
+  const operatorType = document.getElementById('modalOperatorType').value;
+  const operatorName = document.getElementById('modalOperatorName').value.trim();
+  await fetch(\`/api/ascs/\${modalAscId}/operator\`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ operatorType, operatorName })
+  });
+  asc.operatorType = operatorType;
+  asc.operatorName = operatorName;
+  const msg = document.getElementById('operatorSavedMsg');
+  if (msg) { msg.style.display = 'inline'; setTimeout(() => { msg.style.display = 'none'; }, 2000); }
+  renderTable();
+}
+
+// ==================== NATIONAL BREAKDOWN ====================
+function renderNationalBreakdown(breakdown) {
+  const el = document.getElementById('nationalBreakdownChips');
+  if (!el) return;
+  const entries = Object.entries(breakdown).sort((a,b) => b[1]-a[1]);
+  if (entries.length === 0) {
+    el.innerHTML = '<span style="color:#9ca3af;font-size:.8rem">No national operators found in database.</span>';
+    return;
+  }
+  el.innerHTML = entries.map(([name, count]) =>
+    \`<span class="breakdown-chip"><b>\${count}</b> \${name}</span>\`
+  ).join('');
+}
+
+// ==================== OPERATORS TAB ====================
+const OPERATORS_DATA = [
+  { name: 'USPI', parent: 'Tenet Healthcare', locations: '535+', hq: 'Dallas, TX', website: 'uspi.com', key: 'USPI' },
+  { name: 'SCA Health', parent: 'Optum/UnitedHealth Group', locations: '320+', hq: 'Deerfield, IL', website: 'scahealth.com', key: 'SCA Health' },
+  { name: 'Surgery Partners', parent: 'Public (SGRY)', locations: '180+', hq: 'Brentwood, TN', website: 'surgerypartners.com', key: 'Surgery Partners' },
+  { name: 'AmSurg', parent: 'KKR (private)', locations: '250+', hq: 'Nashville, TN', website: 'amsurg.com', key: 'AmSurg' },
+  { name: 'HCA Surgery Ventures', parent: 'HCA Healthcare', locations: '80+', hq: 'Nashville, TN', website: 'hcahealthcare.com', key: 'HCA' },
+  { name: 'Covenant Surgical Partners', parent: 'Harvest Partners (PE)', locations: '50+', hq: 'Nashville, TN', website: 'covenantsurgical.com', key: 'Covenant Surgical' },
+  { name: 'National Surgical Healthcare', parent: 'Surgery Partners (acq. 2020)', locations: '30+', hq: 'Chicago, IL', website: 'nationalsurgical.com', key: 'National Surgical Care' },
+  { name: 'Regent Surgical Health', parent: 'Independent (mgmt co)', locations: '50+', hq: 'Chicago, IL', website: 'regentsurgical.com', key: 'Regent Surgical' },
+  { name: 'American Vision Partners', parent: 'KKR (PE)', locations: '50+', hq: 'Scottsdale, AZ', website: 'americanvisionpartners.com', key: 'American Vision Partners' },
+  { name: 'Nueterra Healthcare', parent: 'Private equity', locations: '25+', hq: 'Overland Park, KS', website: 'nueterra.com', key: 'Nueterra' },
+];
+
+function renderOpsTab() {
+  const grid = document.getElementById('opsGrid');
+  if (!grid) return;
+  // Build per-operator counts from allAscs
+  const dbCounts = {};
+  allAscs.forEach(a => {
+    if (a.operatorType === 'national' && a.operatorName) {
+      dbCounts[a.operatorName] = (dbCounts[a.operatorName] || 0) + 1;
+    }
+  });
+  grid.innerHTML = OPERATORS_DATA.map(op => {
+    const dbCount = dbCounts[op.key] || 0;
+    return \`<div class="op-card">
+      <div class="op-card-header">
+        <div>
+          <div class="op-card-name">\${op.name}</div>
+          <div class="op-card-parent">\${op.parent}</div>
+        </div>
+        <div class="op-db-count">In DB: \${dbCount}</div>
+      </div>
+      <span class="op-type-chip op-national-chip">National Operator</span>
+      <div class="op-card-detail">
+        <span>📍 \${op.hq}</span>
+        <span>🏥 ~\${op.locations} locations</span>
+      </div>
+      <a class="op-card-link" href="https://\${op.website}" target="_blank" rel="noopener">🔗 \${op.website}</a>
+    </div>\`;
+  }).join('');
+}
 
 // Start
 init();
