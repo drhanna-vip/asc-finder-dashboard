@@ -854,6 +854,8 @@ function applyMapFilters() {
   const opF = document.getElementById('mapOperatorFilter') ? document.getElementById('mapOperatorFilter').value : 'all';
   
   let visible = 0;
+  const visibleLatLngs = [];
+
   ascMarkers.forEach(({ asc, marker }) => {
     const stateOk = !stateF || asc.state === stateF;
     const innOk = !innF || asc.innStatus === innF;
@@ -863,20 +865,32 @@ function applyMapFilters() {
     const opOk = !opF || opF === 'all' || asc.operatorType === opF;
     if (stateOk && innOk && typeOk && opOk && asc.lat && asc.lng) {
       if (!map.hasLayer(marker)) marker.addTo(map);
+      visibleLatLngs.push([asc.lat, asc.lng]);
       visible++;
     } else {
       if (map.hasLayer(marker)) marker.remove();
     }
   });
   
-  // VIP markers filter
+  // VIP markers filter — always include VIP in bounds when state matches
   vipMarkers.forEach(({ vip, marker }) => {
     const stateOk = !stateF || vip.state === stateF;
-    if (stateOk) { if (!map.hasLayer(marker)) marker.addTo(map); }
-    else { if (map.hasLayer(marker)) marker.remove(); }
+    if (stateOk) {
+      if (!map.hasLayer(marker)) marker.addTo(map);
+      if (vip.lat && vip.lng) visibleLatLngs.push([vip.lat, vip.lng]);
+    } else {
+      if (map.hasLayer(marker)) marker.remove();
+    }
   });
   
   document.getElementById('mapCounter').textContent = \`\${visible} ASCs visible\`;
+
+  // Auto-pan + zoom to filtered markers
+  if (stateF && visibleLatLngs.length > 0) {
+    map.fitBounds(visibleLatLngs, { padding: [50, 50], maxZoom: 9, animate: true });
+  } else if (!stateF && visibleLatLngs.length > 0) {
+    map.fitBounds(visibleLatLngs, { padding: [30, 30], maxZoom: 6, animate: true });
+  }
 }
 
 function selectVip(v) {
