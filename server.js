@@ -487,6 +487,17 @@ tr:hover td{background:#f9fafb}
             <option value="health-system">Health Systems</option>
             <option value="independent">Independent</option>
           </select>
+          <label>Specialty:</label>
+          <select class="filter-sel" id="mapSpecialtyFilter" onchange="applyMapFilters()">
+            <option value="">All</option>
+            <option value="pain">🩺 Pain</option>
+            <option value="vein">💉 Vein</option>
+            <option value="ortho">🦴 Ortho</option>
+            <option value="spine">🔬 Spine</option>
+            <option value="cardio">❤️ Cardio</option>
+            <option value="endo">🔭 GI/Endo</option>
+            <option value="ophtho">👁 Ophtho</option>
+          </select>
         </div>
         <div style="margin-left:auto;font-size:.8rem;color:var(--gray)" id="mapCounter">Loading data...</div>
       </div>
@@ -538,6 +549,19 @@ tr:hover td{background:#f9fafb}
             <option value="national">National Operators</option>
             <option value="health-system">Health Systems</option>
             <option value="independent">Independent</option>
+          </select>
+          <select id="dbSpecialty" onchange="renderTable()">
+            <option value="">All Specialties</option>
+            <option value="pain">🩺 Pain Mgmt</option>
+            <option value="vein">💉 Vein</option>
+            <option value="ortho">🦴 Ortho</option>
+            <option value="spine">🔬 Spine</option>
+            <option value="cardio">❤️ Cardio</option>
+            <option value="endo">🔭 GI/Endo</option>
+            <option value="ophtho">👁 Ophtho</option>
+            <option value="ent">👂 ENT</option>
+            <option value="plastic">✨ Plastic</option>
+            <option value="urology">🫘 Urology</option>
           </select>
         </div>
         <span id="dbCount" style="font-size:.8rem;color:var(--gray);margin-left:auto"></span>
@@ -852,6 +876,7 @@ function applyMapFilters() {
   const innF = document.getElementById('mapInnFilter').value;
   const typeF = document.getElementById('mapTypeFilter') ? document.getElementById('mapTypeFilter').value : '';
   const opF = document.getElementById('mapOperatorFilter') ? document.getElementById('mapOperatorFilter').value : 'all';
+  const specF2 = document.getElementById('mapSpecialtyFilter') ? document.getElementById('mapSpecialtyFilter').value : '';
   
   let visible = 0;
   const visibleLatLngs = [];
@@ -863,7 +888,8 @@ function applyMapFilters() {
       (typeF === 'independent' && asc.independent === true) ||
       (typeF === 'platform' && asc.innPlatform && asc.innPlatform !== '');
     const opOk = !opF || opF === 'all' || asc.operatorType === opF;
-    if (stateOk && innOk && typeOk && opOk && asc.lat && asc.lng) {
+    const specOk2 = !specF2 || asc.specialty === specF2 || (asc.specialtyTags||[]).includes(specF2);
+    if (stateOk && innOk && typeOk && opOk && specOk2 && asc.lat && asc.lng) {
       if (!map.hasLayer(marker)) marker.addTo(map);
       visibleLatLngs.push([asc.lat, asc.lng]);
       visible++;
@@ -969,6 +995,7 @@ function renderTable() {
 
   const typeF = document.getElementById('dbType') ? document.getElementById('dbType').value : '';
   const opF = document.getElementById('dbOperator') ? document.getElementById('dbOperator').value : 'all';
+  const specF = document.getElementById('dbSpecialty') ? document.getElementById('dbSpecialty').value : '';
   let filtered = allAscs.filter(a => {
     const match = !search || a.name.toLowerCase().includes(search) || (a.dba||"").toLowerCase().includes(search) || a.city.toLowerCase().includes(search) || a.address.toLowerCase().includes(search);
     const stateOk = !stateF || a.state === stateF;
@@ -980,7 +1007,8 @@ function renderTable() {
       (notesF === 'notes' && a.notes) ||
       (notesF === 'checklist' && Object.keys(a.checklist||{}).length > 0);
     const opOk = !opF || opF === 'all' || a.operatorType === opF;
-    return match && stateOk && innOk && typeOk && notesOk && opOk;
+    const specOk = !specF || a.specialty === specF || (a.specialtyTags||[]).includes(specF);
+    return match && stateOk && innOk && typeOk && notesOk && opOk && specOk;
   });
 
   filtered.sort((a,b) => {
@@ -1011,7 +1039,7 @@ function renderTable() {
     const contactCell = a.contactName ? \`<span style="font-size:.75rem;color:#374151">\${a.contactName}\${a.contactTitle ? '<br><span style="color:#9ca3af">'+a.contactTitle+'</span>' : ''}</span>\` : '<span style="color:#d1d5db">—</span>';
 
     return \`<tr>
-      <td><b style="color:var(--navy)">\${a.name}</b><br><span style="font-size:.72rem;color:#9ca3af">NPI: \${a.npi}</span>\${opBadge}</td>
+      <td><b style="color:var(--navy)">\${a.name}</b><br><span style="font-size:.72rem;color:#9ca3af">NPI: \${a.npi}</span>\${opBadge}\${a.specialty ? \'<span style="background:#e0f2fe;color:#0369a1;padding:2px 6px;border-radius:8px;font-size:.65rem;font-weight:700;margin-left:4px">\'+a.specialty.toUpperCase()+\'</span>\' : \'\'}</td>
       <td>\${a.state}</td>
       <td>\${a.city}</td>
       <td>\${badge}\${typeBadge}</td>
