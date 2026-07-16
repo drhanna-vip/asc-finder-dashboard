@@ -1,4 +1,5 @@
 'use strict';
+try { require('dotenv').config({ path: require('path').join(__dirname, '.env'), override: true }); } catch(e) {}
 const express = require('express');
 const session = require('express-session');
 const csrf = require('csurf');
@@ -10,7 +11,8 @@ const app = express();
 const PORT = process.env.PORT || 10002;
 const DASH_PASSWORD = process.env.DASH_PASSWORD || 'vip41';
 const AUTH_USER = process.env.AUTH_USER || 'gh';
-const SESSION_SECRET = process.env.SESSION_SECRET || 'asc-finder-secret-2026';
+const SESSION_SECRET = process.env.SESSION_SECRET;
+if (!SESSION_SECRET) { console.error('FATAL: SESSION_SECRET env var is required but not set. Refusing to start.'); process.exit(1); }
 
 // Pre-hash password
 const PASS_HASH = bcrypt.hashSync(DASH_PASSWORD, 10);
